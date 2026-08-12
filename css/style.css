@@ -1,0 +1,54 @@
+* { box-sizing: border-box; }
+
+:root {
+    font-family: Inter, Arial, sans-serif;
+    color: #172033;
+    background: #f6f8fb;
+}
+
+body { margin: 0; min-height: 100vh; }
+
+.navbar {
+    height: 72px;
+    padding: 0 7%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fff;
+    border-bottom: 1px solid #e8ebf0;
+}
+
+.brand { color: #172033; text-decoration: none; font-size: 25px; font-weight: 800; }
+.brand span { color: #2563eb; }
+
+nav { display: flex; gap: 26px; }
+nav a { color: #526070; text-decoration: none; font-weight: 600; }
+nav a:hover { color: #2563eb; }
+
+.hero { max-width: 1150px; margin: 0 auto; padding: 90px 24px 50px; }
+.hero-content { max-width: 780px; }
+.eyebrow { color: #2563eb; font-size: 13px; font-weight: 800; letter-spacing: 1.5px; }
+h1 { margin: 12px 0 20px; font-size: clamp(42px, 7vw, 72px); line-height: 1.02; letter-spacing: -2.5px; }
+.subtitle { max-width: 700px; color: #667085; font-size: 18px; line-height: 1.7; }
+
+.search-box { display: flex; gap: 10px; margin-top: 32px; max-width: 650px; }
+.search-box input { flex: 1; min-width: 0; padding: 16px 18px; border: 1px solid #d8dee8; border-radius: 10px; font-size: 16px; outline: none; }
+.search-box input:focus { border-color: #2563eb; }
+button { border: 0; border-radius: 10px; padding: 0 24px; background: #2563eb; color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; }
+button:hover { background: #1d4ed8; }
+
+.feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 80px; }
+.card { padding: 25px; background: #fff; border: 1px solid #e8ebf0; border-radius: 16px; box-shadow: 0 8px 30px rgba(16, 24, 40, .04); }
+.card strong { font-size: 28px; }
+.card h2 { margin: 16px 0 8px; font-size: 19px; }
+.card p { margin: 0; color: #667085; line-height: 1.6; }
+footer { padding: 30px; text-align: center; color: #98a2b3; font-size: 14px; }
+
+@media (max-width: 700px) {
+    .navbar { padding: 0 20px; }
+    nav { display: none; }
+    .hero { padding-top: 55px; }
+    .feature-grid { grid-template-columns: 1fr; margin-top: 50px; }
+    .search-box { flex-direction: column; }
+    button { height: 50px; }
+}
