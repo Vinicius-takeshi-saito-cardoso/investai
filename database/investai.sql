@@ -23,8 +23,12 @@ CREATE TABLE IF NOT EXISTS favoritos (
     ticker VARCHAR(20) NOT NULL,
     criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY favorito_usuario_ativo (usuario_id, ticker),
+    INDEX idx_favoritos_ticker (ticker),
     CONSTRAINT fk_favoritos_usuario
         FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_favoritos_ativo
+        FOREIGN KEY (ticker) REFERENCES ativos(ticker)
         ON DELETE CASCADE
 );
 

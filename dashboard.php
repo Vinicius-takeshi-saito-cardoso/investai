@@ -16,21 +16,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!preg_match('/^[A-Z0-9]{3,20}$/', $ticker)) {
         $error = 'Informe um ticker valido.';
-    } elseif ($acao === 'adicionar') {
-        $stmt = $pdo->prepare('INSERT IGNORE INTO favoritos (usuario_id, ticker) VALUES (:usuario_id, :ticker)');
-        $stmt->execute(['usuario_id' => $usuarioId, 'ticker' => $ticker]);
-        $message = $stmt->rowCount() ? 'Ativo adicionado aos favoritos.' : 'Este ativo ja esta nos seus favoritos.';
-    } elseif ($acao === 'remover') {
-        $stmt = $pdo->prepare('DELETE FROM favoritos WHERE usuario_id = :usuario_id AND ticker = :ticker');
-        $stmt->execute(['usuario_id' => $usuarioId, 'ticker' => $ticker]);
-        $message = 'Favorito removido.';
+    } elseif (!in_array($acao, ['adicionar', 'remover'], true)) {
+        $error = 'Acao invalida.';
+    } else {
+        $stmt = $pdo->prepare('SELECT ticker FROM ativos WHERE ticker = :ticker LIMIT 1');
+        $stmt->execute(['ticker' => $ticker]);
+        $ativoExiste = (bool) $stmt->fetch();
+
+        if (!$ativoExiste) {
+            $error = 'Este ativo nao esta cadastrado.';
+        } elseif ($acao === 'adicionar') {
+            $stmt = $pdo->prepare('INSERT IGNORE INTO favoritos (usuario_id, ticker) VALUES (:usuario_id, :ticker)');
+            $stmt->execute(['usuario_id' => $usuarioId, 'ticker' => $ticker]);
+            $message = $stmt->rowCount() ? 'Ativo adicionado aos favoritos.' : 'Este ativo ja esta nos seus favoritos.';
+        } elseif ($acao === 'remover') {
+            $stmt = $pdo->prepare('DELETE FROM favoritos WHERE usuario_id = :usuario_id AND ticker = :ticker');
+            $stmt->execute(['usuario_id' => $usuarioId, 'ticker' => $ticker]);
+            $message = $stmt->rowCount() ? 'Favorito removido.' : 'Este favorito nao foi encontrado na sua conta.';
+        }
     }
 }
 
 $stmt = $pdo->prepare(
     'SELECT f.ticker, a.nome, a.tipo, a.setor
      FROM favoritos f
-     LEFT JOIN ativos a ON a.ticker = f.ticker
+     INNER JOIN ativos a ON a.ticker = f.ticker
      WHERE f.usuario_id = :usuario_id
      ORDER BY f.criado_em DESC'
 );

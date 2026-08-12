@@ -14,14 +14,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isAuthenticated()) {
 
     if (!$tickerValido) {
         $error = 'Ticker invalido.';
-    } elseif ($acao === 'adicionar') {
-        $stmt = $pdo->prepare('INSERT IGNORE INTO favoritos (usuario_id, ticker) VALUES (:usuario_id, :ticker)');
-        $stmt->execute(['usuario_id' => currentUserId(), 'ticker' => $ticker]);
-        $message = $stmt->rowCount() ? 'Ativo adicionado aos favoritos.' : 'Este ativo ja esta nos seus favoritos.';
-    } elseif ($acao === 'remover') {
-        $stmt = $pdo->prepare('DELETE FROM favoritos WHERE usuario_id = :usuario_id AND ticker = :ticker');
-        $stmt->execute(['usuario_id' => currentUserId(), 'ticker' => $ticker]);
-        $message = 'Favorito removido.';
+    } elseif (!in_array($acao, ['adicionar', 'remover'], true)) {
+        $error = 'Acao invalida.';
+    } else {
+        $stmt = $pdo->prepare('SELECT ticker FROM ativos WHERE ticker = :ticker LIMIT 1');
+        $stmt->execute(['ticker' => $ticker]);
+        $ativoExiste = (bool) $stmt->fetch();
+
+        if (!$ativoExiste) {
+            $error = 'Este ativo nao esta cadastrado.';
+        } elseif ($acao === 'adicionar') {
+            $stmt = $pdo->prepare('INSERT IGNORE INTO favoritos (usuario_id, ticker) VALUES (:usuario_id, :ticker)');
+            $stmt->execute(['usuario_id' => currentUserId(), 'ticker' => $ticker]);
+            $message = $stmt->rowCount() ? 'Ativo adicionado aos favoritos.' : 'Este ativo ja esta nos seus favoritos.';
+        } elseif ($acao === 'remover') {
+            $stmt = $pdo->prepare('DELETE FROM favoritos WHERE usuario_id = :usuario_id AND ticker = :ticker');
+            $stmt->execute(['usuario_id' => currentUserId(), 'ticker' => $ticker]);
+            $message = $stmt->rowCount() ? 'Favorito removido.' : 'Este favorito nao foi encontrado na sua conta.';
+        }
     }
 }
 
@@ -31,7 +41,12 @@ $favoritado = false;
 if ($tickerValido) {
     $stmt = $pdo->prepare('SELECT ticker, nome, tipo, setor FROM ativos WHERE ticker = :ticker LIMIT 1');
     $stmt->execute(['ticker' => $ticker]);
-    $ativo = $stmt->fetch() ?: ['ticker' => $ticker, 'nome' => null, 'tipo' => null, 'setor' => null];
+    $ativo = $stmt->fetch();
+
+    if (!$ativo) {
+        $error = $error ?: 'Este ativo nao esta cadastrado.';
+        $ativo = ['ticker' => $ticker, 'nome' => null, 'tipo' => null, 'setor' => null];
+    }
 
     if (isAuthenticated()) {
         $stmt = $pdo->prepare('SELECT id FROM favoritos WHERE usuario_id = :usuario_id AND ticker = :ticker LIMIT 1');
@@ -70,15 +85,17 @@ require_once __DIR__ . '/includes/header.php';
             </section>
 
             <section class="panel action-panel">
-                <?php if (isAuthenticated()): ?>
+                <?php if (isAuthenticated() && $ativo['nome'] !== null): ?>
                     <form method="post">
                         <input type="hidden" name="ticker" value="<?= e($ticker) ?>">
                         <input type="hidden" name="acao" value="<?= $favoritado ? 'remover' : 'adicionar' ?>">
                         <button class="<?= $favoritado ? 'danger' : '' ?>" type="submit"><?= $favoritado ? 'Remover dos favoritos' : 'Adicionar aos favoritos' ?></button>
                     </form>
-                <?php else: ?>
+                <?php elseif (!isAuthenticated()): ?>
                     <p class="muted">Entre na sua conta para favoritar este ativo.</p>
                     <a class="button" href="login.php">Entrar</a>
+                <?php else: ?>
+                    <p class="muted">Cadastre o ativo no banco antes de adiciona-lo aos favoritos.</p>
                 <?php endif; ?>
             </section>
         <?php endif; ?>
